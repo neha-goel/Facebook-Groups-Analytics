@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <?php
 require_once '../FbStats.php';
 include_once 'config.php';
@@ -6,51 +5,16 @@ include_once 'config.php';
 if (!session_id())
     session_start();
 
-function displayUsersTable($users, $column=null) {
-
-    $table = '<table class="bordered-table">';
-    foreach ($users as &$user) {
-        foreach ($user as $stat => $value) {
-            if (in_array($stat, array('id', 'name', $column)) === false) {
-                unset($user[$stat]);
-            }
-        }
-    }
-
-    unset($user);
-
-    foreach ($users as $user) {
-        $table .= '<tr>';
-        foreach ($user as $stat => $value) {
-            $table .= ($stat === 'id') ? "<td><img src='https://graph.facebook.com/{$value}/picture' /></td>" : "<td>{$value}</td>";
-        }
-        $table .= '</tr>';
-    }
-    $table .= '</table>';
-
-    echo "<div class='span10'><h3>{$column}</h3>{$table}</div>";
-}
-
 $fb = new FbStats($config);
 
-$feedParams = array(
-    'sourceId' => $sourceId,
-    'limit' => 500,
-    'since' => 'last+Year',
-);
-$stats = array(
-          'totalStatus',
-          'totalLinks',
-          'totalStatusChars',
-          'didLike',
-          'didComment',
-          'didCommentChars',
-          'gotLikes',
-          'gotComments',
-          'gotLikesOnComments',
-          'gotTags',
-         );
+//get Groups 
+try {
+    $groups = $fb->getGroups();
+} catch (Exception $e) {
+    echo '<div class="alert-message error">'.$e->getMessage().'</div>';
+}
 ?>
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8">
@@ -110,12 +74,33 @@ $stats = array(
             .topbar .btn {
                 border: 0;
             }
-
+			
+			label,input[type="text"],select{
+				clear:both;
+				display:block;
+				font-weight:bold;
+				text-align: left;
+			}
+			
+			.ml20{
+				margin-left:20px;
+			}
+			
+			.success{ 
+				font-weight:bold;
+				font-size:18px;
+				color:#057135;
+			}
+			
+			.error{ 
+				color:#960B0B;
+			}
         </style>
+		<script src="jquery-1.7.1.min.js"></script>
+		<script src="stats.js"></script>
     </head>
 
     <body>
-
         <div class="topbar">
             <div class="fill">
                 <div class="container">
@@ -125,31 +110,26 @@ $stats = array(
         </div>
 
         <div class="container">
-
             <div class="content">
                 <div class="page-header">
                     <h1>Facebook Group Analytics Example</h1>
                 </div>
                 <div class="row">
-                    <div class="span10">
-                        <div class="row">
-<?php
-//get Group Feed
-try {
-    $groupFeed = $fb->getFeed($feedParams);
-} catch (Exception $e) {
-
-    echo '<div class="alert-message error">'.$e->getMessage().'</div>';
-}
-
-// totalStatusChars - counts total characters of status updates
-foreach($stats as $stat) {
-    //var_dump($stat);
-    $users = $fb->getTopUsers($groupFeed, $stat, 5);
-    displayUsersTable($users, $stat);
-}
-?>
-                        </div>
+                    <div class="span9">
+                        <div class="row ml20">
+							<label>Select Group</label>
+							<select id="group">
+								<option value="">Select Group</option>
+								<?php 
+									foreach( $groups['data'] as $key=>$val){
+										echo '<option value="'.$val['id'].'">'.$val['name'].'</option>';
+									}
+								?>
+							</select>
+							<br/><input type="submit" name="show_result" id="show_result" value="Show Result" />
+							&nbsp; &nbsp; <input type="submit" name="show_result_publish" id="show_result_publish" value="Show & Publish Result" />
+							<br/><br/><div id="result"></div>
+						</div>
                     </div>
                     <div class="span4">
                         <h3>Project Links</h3>
@@ -164,8 +144,6 @@ foreach($stats as $stat) {
             <footer>
                 <p>&copy; Company 2011</p>
             </footer>
-
         </div> <!-- /container -->
-
     </body>
 </html>
