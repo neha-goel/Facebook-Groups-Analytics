@@ -1,7 +1,7 @@
 <?php
 $config = array(
-    'appId' => 'YOUR_APP_ID',
-    'secret' => 'YOUR_APP_SECRET',
+    'appId' => '151139138249189',
+    'secret' => 'c09a88c9093d2a58097c636a2337c2ca',
     'permissionsArray' => array(
         'publish_stream',
         'read_stream',
@@ -12,5 +12,5 @@ $config = array(
 );
 
 // Nagpur PHP User group
-$sourceId = '107329506051213';
+$sourceId = '248938471791448';
 ?>

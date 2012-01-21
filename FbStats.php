@@ -237,7 +237,7 @@ class FbStats
             $result = $e->getResult();
             throw new Exception($result['error']['message']);
         }
-		//print_r($data);
+		//print_R($data);
         return $data;
 
     }//end getFeed()
@@ -271,6 +271,7 @@ class FbStats
     public function wallPost($sourceId, $message)
     {
 		$posted = 0;
+		
 		$wall_post =  array(
 			'access_token' => $this->accessToken, 
 			'message' => $message,
@@ -323,138 +324,160 @@ class FbStats
     public function getFeedUsers($feed, $dateRange=null)
     {
         $userData = array(
-                     'id'                 => null,
-                     'name'               => null,
-                     'totalStatus'        => 0,
-                     'totalLinks'         => 0,
-                     'totalStatusChars'   => 0,
-                     'didLike'            => 0,
-                     'didComment'         => 0,
-                     'didCommentChars'    => 0,
-                     'gotLikes'           => 0,
-                     'gotComments'        => 0,
-                     'gotLikesOnComments' => 0,
-                     'gotTags'            => 0,
-                    );
-        $users    = array();
-
+						'id'                 => null,
+						'name'               => null,
+						'totalStatus'        => 0,
+						'totalStatusChars'   => 0,
+						'totalLinks'         => 0,
+						'totalPictures'      => 0,
+						'didLike'            => 0,
+						'didComment'         => 0,
+						'didCommentChars'    => 0,
+						'gotLikesOnComments' => 0,
+                        'gotTags'            => 0,
+					);
+        $postData = array(
+						'from_id'      		 => null,
+						'name'               => null,
+						'gotLikes'           => 0,
+						'gotComments'        => 0,
+						);
+	
         foreach ($feed['data'] as $entry) {
             if (isset($entry['from']) === true) {
                 if (isset($users[$entry['from']['id']]) === false) {
-                    $users[$entry['from']['id']] = $userData;
+					$users[$entry['from']['id']] = $userData;
                     // Set user's name.
-                    $users[$entry['from']['id']]['name'] = $entry['from']['name'];
+					$users[$entry['from']['id']]['name'] = $entry['from']['name'];
                     // Set user's id.
-                    $users[$entry['from']['id']]['id'] = $entry['from']['id'];
+					$users[$entry['from']['id']]['id'] = $entry['from']['id'];
                 }
+				$posts[$entry['id']] = $postData;
+				$posts[$entry['id']]['id'] = $entry['id'];
+				$posts[$entry['id']]['name'] = $entry['from']['name'];
+				$posts[$entry['id']]['from_id'] = $entry['from']['id'];
             }
-
-            // Status messages.
-            if ($entry['type'] === 'status') {
-                // Add Status count.
-				if ( $dateRange ){
-					if ( strtotime($entry['created_time']) >= $dateRange['since'] && strtotime($entry['created_time']) <= $dateRange['until'] ) {
+			if ( $dateRange ){
+				if ( strtotime($entry['created_time']) >= $dateRange['since'] && strtotime($entry['created_time']) <= $dateRange['until'] ) {
+					// Status messages.
+					if ($entry['type'] === 'status') {
+						// Add Status count.	
 						$users[$entry['from']['id']]['totalStatus']++;
+						// Add total characters of status update.
+						if (isset($entry['message']) === true) {
+							// FIXME: non-english characters make above condition false.
+							$users[$entry['from']['id']]['totalStatusChars']
+								+= strlen($entry['message']);
+							$message = explode(" ", $entry['message']);
+							$message_part = implode(" ", array_splice($message, 0, 5));
+							$posts[$entry['id']]['message'] = $message_part."..";
+						}
 					}
-				}else{
-					$users[$entry['from']['id']]['totalStatus']++;
-				}
-                // Add total characters of status update.
-                if (isset($entry['message']) === true) {
-                    // FIXME: non-english characters make above condition false.
-                    $users[$entry['from']['id']]['totalStatusChars']
-                        += strlen($entry['message']);
-                }
-            }//end if
+				
+					// Links.
+					if ($entry['type'] === 'link') {
+						// Add Status count.
+						$users[$entry['from']['id']]['totalStatus']++;
+						// Add Link count.
+						$users[$entry['from']['id']]['totalLinks']++;
+						$message = explode(" ", $entry['message']);
+						$message_part = implode(" ", array_splice($message, 0, 5));
+						$posts[$entry['id']]['message'] = $message_part."..";
+					}
+					
+					if ($entry['type'] === 'photo') {
+						// Add Status count.
+						$users[$entry['from']['id']]['totalStatus']++;
+						// Add Picture count.
+						$users[$entry['from']['id']]['totalPictures']++;
+						$message = explode(" ", $entry['message']);
+						$message_part = implode(" ", array_splice($message, 0, 5));
+						$posts[$entry['id']]['message'] = $message_part."..";
+					}
 
-            // Links.
-            if ($entry['type'] === 'link') {
-                // Add Status count.
-                $users[$entry['from']['id']]['totalLinks']++;
-            }
+					// Likes.
+					if (isset($entry['likes']) === true) {
+						if (isset($entry['likes']['data']) === true) {
+							//$users[$entry['from']['id']]['gotLikes']
+								//+= count($entry['likes']['data']);
+							// Loop through likers.
+							foreach ($entry['likes']['data'] as $like) {
+								// If user is not in the list, add.
+								if (isset($users[$like['id']]) === false) {
+									$users[$like['id']] = $userData;
+									// Set user's name.
+									$users[$like['id']]['name'] = $like['name'];
+									// Set user's id.
+									$users[$like['id']]['id'] = $like['id'];
+								}//end if
 
-            // Likes.
-            if (isset($entry['likes']) === true) {
-                if (isset($entry['likes']['data']) === true) {
-                    $users[$entry['from']['id']]['gotLikes']
-                        += count($entry['likes']['data']);
-                    // Loop through likers.
-                    foreach ($entry['likes']['data'] as $like) {
-                        // If user is not in the list, add.
-                        if (isset($users[$like['id']]) === false) {
-                            $users[$like['id']] = $userData;
-                            // Set user's name.
-                            $users[$like['id']]['name'] = $like['name'];
-                            // Set user's id.
-                            $users[$like['id']]['id'] = $like['id'];
-                        }//end if
+								// Increase didComment.
+								$users[$like['id']]['didLike']++;
+							}//end foreach
+						}
+						if (isset($entry['likes']['count']) === true) {
+							$posts[$entry['id']]['gotLikes']
+								= (int) $entry['likes']['count'];
+						}//end if
+					}//end if
 
-                        // Increase didComment.
-                        $users[$like['id']]['didLike']++;
-                    }//end foreach
-                } else if (isset($entry['likes']['count']) === true) {
-                    $users[$entry['from']['id']]['gotLikes']
-                        += (int) $entry['likes']['count'];
-                }//end if
-            }//end if
+					if (isset($entry['comments']) === true) {
+						if (isset($entry['comments']['data']) === true) {
+							// Increase comment counter.
+							//$users[$entry['from']['id']]['gotComments']
+								//+= count($entry['comments']['data']);
+							// Loop through each comment.
+							foreach ($entry['comments']['data'] as $comment) {
+								// If commentator is not in the list, add.
+								if (isset($users[$comment['from']['id']]) === false) {
+									$users[$comment['from']['id']] = $userData;
+									// Set user's name.
+									$users[$comment['from']['id']]['name']
+										= $comment['from']['name'];
+									// Set user's id.
+									$users[$comment['from']['id']]['id']
+										= $comment['from']['id'];
+								}
 
-            if (isset($entry['comments']) === true) {
-                if (isset($entry['comments']['data']) === true) {
-                    // Increase comment counter.
-                    $users[$entry['from']['id']]['gotComments']
-                        += count($entry['comments']['data']);
-                    // Loop through each comment.
-                    foreach ($entry['comments']['data'] as $comment) {
-                        // If commentator is not in the list, add.
-                        if (isset($users[$comment['from']['id']]) === false) {
-                            $users[$comment['from']['id']] = $userData;
-                            // Set user's name.
-                            $users[$comment['from']['id']]['name']
-                                = $comment['from']['name'];
-                            // Set user's id.
-                            $users[$comment['from']['id']]['id']
-                                = $comment['from']['id'];
-                        }
+								// Increase didComment for this user.
+								$users[$comment['from']['id']]['didComment']++;
+								// Increase didCommentChars.
+								$users[$comment['from']['id']]['didCommentChars'] +=
+									strlen($comment['message']);
+								// Got likes on comments?
+								if (isset($comment['likes']) === true) {
+									$users[$comment['from']['id']]['gotLikesOnComments'] +=
+										(int) $comment['likes'];
+								}
 
-                        // Increase didComment for this user.
-                        $users[$comment['from']['id']]['didComment']++;
-                        // Increase didCommentChars.
-                        $users[$comment['from']['id']]['didCommentChars'] +=
-                            strlen($comment['message']);
-                        // Got likes on comments?
-                        if (isset($comment['likes']) === true) {
-                            $users[$comment['from']['id']]['gotLikesOnComments'] +=
-                                (int) $comment['likes'];
-                        }
+								// Are people tagged in this message?
+								if (isset($comment['message_tags']) === true) {
+									foreach ($comment['message_tags'] as $tag) {
+										// Check if user exists, otherwise add.
+										if (isset($users[$tag['id']]) === false) {
+											$users[$tag['id']] = $userData;
+											// Set user's name.
+											$users[$tag['id']]['name'] = $tag['name'];
+											// Set user's id.
+											$users[$tag['id']]['id'] = $tag['id'];
+										}
+									}//end foreach
 
-                        // Are people tagged in this message?
-                        if (isset($comment['message_tags']) === true) {
-                            foreach ($comment['message_tags'] as $tag) {
-                                // Check if user exists, otherwise add.
-                                if (isset($users[$tag['id']]) === false) {
-                                    $users[$tag['id']] = $userData;
-                                    // Set user's name.
-                                    $users[$tag['id']]['name'] = $tag['name'];
-                                    // Set user's id.
-                                    $users[$tag['id']]['id'] = $tag['id'];
-                                }
-                            }//end foreach
-
-                            $users[$tag['id']]['gotTags']++;
-                        }
-                    }//end foreach
-                } else if (isset($entry['comments']['count']) === true) {
-                    $users[$entry['from']['id']]['gotComments'] +=
-                        (int) $entry['comments']['count'];
-                }//end if
-            }//end if
+									$users[$tag['id']]['gotTags']++;
+								}
+							}//end foreach
+						}
+						if (isset($entry['comments']['count']) === true) {
+							$posts[$entry['id']]['gotComments'] =
+								(int) $entry['comments']['count'];
+						}//end if
+					}//end if
+				}//end if
+			}
         }//end foreach
-
-        return $users;
-
+        return array ($users, $posts);
     }//end getFeedUsers()
-
-
+	
     /**
      * Get Top Users functions extracts userf from given feed
      *
@@ -468,21 +491,26 @@ class FbStats
     {
         ${$statName} = array();
         $name        = array();
+        $sort_array = array();
 
-        $users = $this->getFeedUsers($feed, $dateRange);
-        foreach ($users as $key => $value) {
-            ${$statName}[$key] = $value[$statName];
-            $name[$key]        = $value['name'];
+        list ($users, $posts) = $this->getFeedUsers($feed, $dateRange);
+		if( in_array($statName , array('totalStatus','totalPictures')) ){
+			$sort_array = $users;
+		}else{
+			$sort_array = $posts;
+		}
+		
+		foreach ($sort_array as $key => $value) {
+			${$statName}[$key] = $value[$statName];
+			$name[$key]        = $value['name'];
         }
+		
+        array_multisort(${$statName}, SORT_DESC, SORT_NUMERIC, $name, $sort_array);
 
-        array_multisort(${$statName}, SORT_DESC, SORT_NUMERIC, $name, $users);
-
-        if ($count !== null && count($users) > $count) {
-            $users = array_slice($users, 0, $count);
+        if ($count !== null && count($sort_array) > $count) {
+            $sort_array = array_slice($sort_array, 0, $count);
         }
-
-        return $users;
-
+        return $sort_array;
     }//end getTopUsers()
 }//end class
 ?>

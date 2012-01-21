@@ -75,11 +75,12 @@ try {
                 border: 0;
             }
 			
-			label,input[type="text"],select{
+			label,input[type="text"],select,textarea{
 				clear:both;
 				display:block;
 				font-weight:bold;
 				text-align: left;
+				width:350px;
 			}
 			
 			.ml20{
@@ -126,8 +127,16 @@ try {
 									}
 								?>
 							</select>
+							<br/><label>Stats</label>
+							<select id="stats">
+								<option value="">Select</option>
+								<option value="totalStatus">Top Posters</option>
+								<option value="gotLikes">Most Liked Posts</option>
+								<option value="gotComments">Most Commented Posts</option>
+								<option value="totalPictures">Top Pictures Uploader</option>
+							</select>
 							<br/><input type="submit" name="show_result" id="show_result" value="Show Result" />
-							&nbsp; &nbsp; <input type="submit" name="show_result_publish" id="show_result_publish" value="Show & Publish Result" />
+							<!--&nbsp; &nbsp; <input type="submit" name="show_result_publish" id="show_result_publish" value="Show & Publish Result" />-->
 							<br/><br/><div id="result"></div>
 						</div>
                     </div>
