@@ -1,7 +1,7 @@
 <?php
 $config = array(
-    'appId' => '151139138249189',
-    'secret' => 'c09a88c9093d2a58097c636a2337c2ca',
+    'appId' => 'YOUR_APP_ID',
+    'secret' => 'YOUR_APP_SECRET',
     'permissionsArray' => array(
         'publish_stream',
         'read_stream',
