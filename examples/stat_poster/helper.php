@@ -81,10 +81,10 @@ function time_ago($diff){
 
     $day=60*60*24;
 	$relative_days = round($diff/$day);
-	if( ($relative_days-1) == 0 ){
+	if( $relative_days == 0 ){
 		$relative_days = 'now';
 	}else{
-		$relative_days = '-'.($relative_days-1).' days';
+		$relative_days = '-'.$relative_days.' days';
 	}
 	return $relative_days;
 }
