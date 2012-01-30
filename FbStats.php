@@ -296,7 +296,7 @@ class FbStats
      *
      * @return array
      */
-    public function getFeedUsers($feed, $params=null)
+    public function getFeedUsers($feed, $extra_params=null)
     {
         $userData = array(
 						'id'                 => null,
@@ -337,8 +337,35 @@ class FbStats
 			// Status messages.
 			if ($entry['type'] === 'status') {
 				// Add Status count.	
-				if ( strtotime($entry['created_time']) >= strtotime($params['since']) && strtotime($entry['created_time']) <= strtotime($params['until']) ) {
-					$users[$entry['from']['id']]['totalStatus']++;
+				if ( strtotime($entry['created_time']) >= strtotime($extra_params['since']) && strtotime($entry['created_time']) <= strtotime($extra_params['until']) ) {
+					if( $extra_params['minLines'] || $extra_params['minWords'] ){
+						$message_lines = $message_words = array();
+						if( $extra_params['minLines'] ){
+							$message_lines = explode("\n", $entry['message']);
+							foreach( $message_lines as $key=>$val){
+								$val = preg_replace('/\s+/', ' ', $val);
+								if( empty($val) || $val==" " ){
+									unset($message_lines[$key]);
+								}
+							}
+						}
+						
+						if( $extra_params['minWords'] ){
+							$message_words = explode(" ", $entry['message']);
+							foreach( $message_words as $key=>$val){
+								$val = str_replace("\n"," ",$val);
+								$val = preg_replace('/\s+/', ' ', $val);
+								if( empty($val) || $val==" " ){
+									unset($message_words[$key]);
+								}
+							}
+						}
+						if( (count($message_lines) > $extra_params['minLines'] ) || (count($message_words) > $extra_params['minWords'] )  ){
+							$users[$entry['from']['id']]['totalStatus']++;
+						}
+					}else{
+						$users[$entry['from']['id']]['totalStatus']++;
+					}
 					// Add total characters of status update.
 					if (isset($entry['message']) === true) {
 						// FIXME: non-english characters make above condition false.
@@ -350,18 +377,22 @@ class FbStats
 		
 			// Links.
 			if ($entry['type'] === 'link') {
-				if ( strtotime($entry['created_time']) >= strtotime($params['since']) && strtotime($entry['created_time']) <= strtotime($params['until']) ) {
-					// Add Status count.
-					$users[$entry['from']['id']]['totalStatus']++;
+				if ( strtotime($entry['created_time']) >= strtotime($extra_params['since']) && strtotime($entry['created_time']) <= strtotime($extra_params['until']) ) {
+					if( !$extra_params['ignoreLinks'] ){	
+						// Add Status count.
+						$users[$entry['from']['id']]['totalStatus']++;
+					}
 					// Add Link count.
 					$users[$entry['from']['id']]['totalLinks']++;
 				}
 			}
 			
 			if ($entry['type'] === 'photo') {
-				if ( strtotime($entry['created_time']) >= strtotime($params['since']) && strtotime($entry['created_time']) <= strtotime($params['until']) ) {
-					// Add Status count.
-					$users[$entry['from']['id']]['totalStatus']++;
+				if ( strtotime($entry['created_time']) >= strtotime($extra_params['since']) && strtotime($entry['created_time']) <= strtotime($extra_params['until']) ) {
+					if( !$extra_params['ignorePhotos'] ){
+						// Add Status count.
+						$users[$entry['from']['id']]['totalStatus']++;
+					}
 					// Add Picture count.
 					$users[$entry['from']['id']]['totalPictures']++;
 				}
@@ -371,7 +402,7 @@ class FbStats
 			if (isset($entry['message']) === true) {
 				$message = explode(" ", $entry['message']);
 				$message_part = implode(" ", array_splice($message, 0, 5));
-				$posts[$entry['id']]['message'] = str_replace("\n"," ",$message_part)."..";
+				$posts[$entry['id']]['message'] = preg_replace('/\s+/', ' ', str_replace("\n"," ",$message_part))."..";
 			}
 
 			// Likes.
@@ -395,7 +426,7 @@ class FbStats
 					}//end foreach
 				}
 				if (isset($entry['likes']['count']) === true) {
-					if ( strtotime($entry['created_time']) >= strtotime($params['since']) && strtotime($entry['created_time']) <= strtotime($params['until']) ) {
+					if ( strtotime($entry['created_time']) >= strtotime($extra_params['since']) && strtotime($entry['created_time']) <= strtotime($extra_params['until']) ) {
 						$posts[$entry['id']]['gotLikes']
 							= (int) $entry['likes']['count'];
 					}
@@ -419,8 +450,8 @@ class FbStats
 						}
 						
 						// Increase comment counter.
-						if ( strtotime($entry['created_time']) >= strtotime($params['since']) && strtotime($entry['created_time']) <= strtotime($params['until']) ) {
-							if( $params['selfComments'] ){
+						if ( strtotime($entry['created_time']) >= strtotime($extra_params['since']) && strtotime($entry['created_time']) <= strtotime($extra_params['until']) ) {
+							if( $extra_params['selfComments'] ){
 								if( $entry['from']['id'] != $comment['from']['id'] ){
 									$posts[$entry['id']]['gotComments']++;
 								}
@@ -430,7 +461,7 @@ class FbStats
 						}
 
 						// Increase didComment for this user.
-						if ( strtotime($comment['created_time']) >= strtotime($params['since']) && strtotime($comment['created_time']) <= strtotime($params['until']) ) {
+						if ( strtotime($comment['created_time']) >= strtotime($extra_params['since']) && strtotime($comment['created_time']) <= strtotime($extra_params['until']) ) {
 							$users[$comment['from']['id']]['didComment']++;
 						}
 						// Increase didCommentChars.
@@ -484,7 +515,7 @@ class FbStats
         $sort_array = array();
 
         list ($users, $posts) = $this->getFeedUsers($feed, $params);
-		if( in_array($statName , array('totalStatus','totalPictures','didComment')) ){
+		if( in_array($statName , array('totalStatus','totalPictures','didComment','totalLinks')) ){
 			$sort_array = $users;
 		}else{
 			$sort_array = $posts;

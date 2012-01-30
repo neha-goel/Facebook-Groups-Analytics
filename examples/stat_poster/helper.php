@@ -1,7 +1,7 @@
 <?php
 $stats = array(
  'totalStatus',
- //'totalLinks',
+ 'totalLinks',
  //'totalStatusChars',
  //'didLike',
  'didComment',
@@ -93,7 +93,7 @@ function createMsgForWallPost($results, $titles, $units, $extra_params, $column=
 	$message = '';
 	if($results){
 		$title = $titles[$column] ." from  ". date('d M Y',strtotime($extra_params['since'])). " to ". date('d M Y',strtotime($extra_params['until']));
-		$message = " \n ---------------------------------------------------------------------- \n \n ";
+		$message = "\n----------------------------------------------------------------------\n \n";
 		$i = 1;
 		
 		$link = "http://www.facebook.com/groups/";
@@ -101,13 +101,21 @@ function createMsgForWallPost($results, $titles, $units, $extra_params, $column=
 			if( $user[$column] ){
 				if( in_array($column, array( 'gotLikes','gotComments')) ){
 					$ids = explode('_',$user['id']);
-					$message .= $i++ .". ".str_replace('"','',$user['message'])." (".$link.$ids[0]."/permalink/".$ids[1].") :: by ".$user['name']." ". $user[$column]. " ".$units[$column]." \n\n ";
+					if( $extra_params['copy_result'] ){
+						$message .= $i++ .". ".str_replace('"','',$user['message'])." (".$link.$ids[0]."/permalink/".$ids[1].") :: by @[".$user['from_id'].":".$user['name']."] ". $user[$column]. " ".$units[$column]."\n \n";
+					}else{
+						$message .= $i++ .". ".str_replace('"','',$user['message'])." (".$link.$ids[0]."/permalink/".$ids[1].") :: by ".$user['name']." ". $user[$column]. " ".$units[$column]."\n \n";
+					}
 				}else{
-					$message .= $i++ .". ". $user['name']." with ". $user[$column]. " ".$units[$column]." \n ";	
+					if( $extra_params['copy_result'] ){
+						$message .= $i++ .". @[".$user['id'].":".$user['name']."] with ". $user[$column]. " ".$units[$column]." \n";	
+					}else{
+							$message .= $i++ .". ". $user['name']." with ". $user[$column]. " ".$units[$column]." \n";	
+					}
 				}	
 			}	
 		}
-		$message .= " \n ";
+		$message .= "\n";
 	}
 	return array($title, $message);
 }

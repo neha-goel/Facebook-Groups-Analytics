@@ -73,6 +73,12 @@ input[type="text"].long,textarea.long{
 	width: 412px;
 }
 
-#more_options{
-	display:none;
+input[type="text"].small{
+	display:inline;
+	width: 180px;
+}
+
+textarea.extra_long{
+	clear:both;
+	width: 750px;
 }

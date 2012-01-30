@@ -58,7 +58,7 @@ try {
                 <div class="row">
                     <div class="span9">
                         <div class="row ml20">
-                            <!--<form id="frmStat" action="ajax.php" method="post">-->
+                            <form id="frmStat" method="post">
                                 <label>Select Group</label>
                                 <select id="group" name="group">
                                     <option value=""> -- </option>
@@ -80,10 +80,7 @@ try {
                                     ?>
                                 </select>
                                 
-								<span id="more_options">
-									<br/><label>Ignore self comments</label>
-									<input type="checkbox" name="selfComments" id="selfComments" value="1" /><br/>
-								</span><br/>
+								<span id="more_options"></span><br/>
 								
 								<label>From</label>
                                 <input type="text" name="from" id="from" value="<?php echo date('d M Y',strtotime('last '.date('l'))); ?>" />
@@ -98,9 +95,9 @@ try {
                                 <br />
 
                                 <input type="submit" name="show_result" id="show_result" value="Show Result" class="btn primary" />
-                                <!--&nbsp; &nbsp; <input type="submit" name="show_result_publish" id="show_result_publish" value="Show & Publish Result" class="btn primary" />-->
+                                &nbsp; &nbsp; <input type="submit" name="copy_result" id="copy_result" value="Result to copy & update" class="btn primary" />
                                 <br/><br/>
-                            <!--</form>-->
+                            </form>
                             <div id="result"></div>
                         </div>
                     </div>

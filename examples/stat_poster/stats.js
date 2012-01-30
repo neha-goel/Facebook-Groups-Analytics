@@ -1,17 +1,34 @@
 $(document).ready(function(){
 	$('#show_result').click(function() {
-		var data = "group="+$("#group").val()+"&from="+$("#from").val()+"&to="+$("#to").val()+"&stat="+$("#stat").val()+"&usersCount="+$("#usersCount").val();
-		if ( $('#selfComments').is(':checked') ){
-			data +="&selfComments="+$("#selfComments").val();
-		}
+		var data = $('#frmStat').serialize();
 		processRequest(data);
+		return false;
+	});
+	
+	$('#copy_result').click(function() {
+		var data = $('#frmStat').serialize();
+		data += "&copy_result=1";
+		processRequest(data);
+		return false;
 	});
 	
 	$('#stat').change(function() { 
 		if ( $(this).val()== 'gotComments' ){
-			$("#more_options").css("display", "block");
+			var htmlStr = '<br/><label>Ignore self comments</label>'
+						+'<input type="checkbox" name="selfComments" id="selfComments" value="1" /><br/>';
+			$("#more_options").html(htmlStr);
+		}else if( $(this).val()== 'totalStatus' ){
+			var htmlStr = '<br/><label>Ignore links</label>'
+						+'<input type="checkbox" name="ignoreLinks" id="ignoreLinks" value="1" /><br/>'
+						+'<br/><label>Ignore photos</label>'
+						+'<input type="checkbox" name="ignorePhotos" id="ignorePhotos" value="1" /><br/>'
+						+'<br/><label>Include post with more than</label>'
+						+'<input type="text" name="minLines" id="minLines" value="" class="small" /> lines<br/>'
+						+'<br/><label>Include post with more than</label>'
+						+'<input type="text" name="minWords" id="minWords" value="" class="small" /> words<br/>';
+			$("#more_options").html(htmlStr);
 		}else{
-			$("#more_options").css("display", "none");
+			$("#more_options").html("");
 		}
 	});
 
@@ -44,7 +61,6 @@ function updateDateRange(date_str, option) {
 }
 
 function processRequest(data){
-	publishResult();
 	if( $("#group").val() && $("#stat").val() ){
 		$("#result").html("<strong>Loading.......</strong>");
 		$.ajax({
@@ -72,6 +88,7 @@ function publishResult(){
 		message += $("#additional_message" ).val();
 		var data = "publish=1&group="+$("#group").val()+"&message="+message;
 		processPublishRequest(data);
+		return false;
 	});
 }
 
